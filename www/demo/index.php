@@ -6,7 +6,4 @@
  * Time: 11:20
  */
 
-class index
-{
-
-}
+echo  'demo';
