@@ -1,28 +1,69 @@
 FROM php:7.2-fpm-alpine
 
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
-&& sed -i 's/http/https/g' /etc/apk/repositories 
+# speed  mirror
+RUN  \
+    sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
+    && sed -i 's/http/https/g' /etc/apk/repositories
 
-RUN apk add  autoconf dpkg-dev dpkg file g++ gcc libc-dev make pkgconf re2c \
-	libzip-dev libzip bzip2-dev \
-    php7 php7-fpm php7-gd php7-mbstring  php7-session  php7-opcache php7-curl \
-    php7-json  php7-mcrypt php7-gettext php7-xml  php7-phar php7-openssl php7-dom\
-	&& ( \
-		# pecl install protobuf \
-		apk add php7-dev && cd /tmp  \
-		&& wget https://github.com/allegro/php-protobuf/archive/v0.12.3.tar.gz \
-		&& tar -zxvf v0.12.3.tar.gz && cd php-protobuf-0.12.3 && phpize && ./configure --with-php-config=/usr/local/bin/php-config \
-		&& make && make install && docker-php-ext-enable protobuf \
-	)\
-	&& docker-php-ext-install bz2  zip pdo_mysql \
-	&& pecl install -o -f redis && docker-php-ext-enable  redis \
-	&& rm -rf /var/cache/apk/* 
-	
-RUN mkdir /var/log/php \
-	&& chown -R www-data:www-data /var/log/php \ 
-	&& chmod 776 -R /var/log/php \
-	&& chown -R www-data:www-data /var/www/html \
-	&& chmod 777 -R /var/www/html
+# depend package
+RUN  \
+    # zip bz2
+    apk add libzip-dev libzip bzip2-dev \
 
+    #  pecl
+        autoconf make dpkg-dev dpkg file g++ gcc libc-dev pkgconf re2c \
 
- 
+    # imagick
+      imagemagick-dev  make  \ 
+
+    #  event
+        libevent-dev   openssl-dev \
+
+    # ext php
+        php7-gd \
+
+    # bash is needed for some scripts
+        bash git
+
+# bz2
+RUN \
+   docker-php-ext-install bz2 \
+
+    # zip
+    && docker-php-ext-install zip \
+
+    # mysql_pdo
+    && docker-php-ext-install pdo_mysql \
+
+    # imagick 
+    && pecl install imagick  \
+    && docker-php-ext-enable imagick  \
+
+    # pcntl - multithreading
+    && docker-php-ext-install pcntl \
+
+    # redis
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+
+    # socket lib
+    && docker-php-ext-install sockets \
+
+    # libevent needs sockets to be loaded. but 'l' is before 's' in alphnum
+    # rename ini to prevent php-startup-errors
+    && mv \
+      /usr/local/etc/php/conf.d/docker-php-ext-sockets.ini \
+      /usr/local/etc/php/conf.d/01_docker-php-ext-sockets.ini \
+
+    # libevent - performance to scheduled events
+    && pecl install event \
+    && docker-php-ext-enable event \
+
+    # remove dev-packaged
+    && apk del autoconf g++ libtool make \
+
+    # remove tmp-data
+    && rm -rf /tmp/* /var/cache/apk/*
+
+# Install Composer and make it available in the PATH
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
