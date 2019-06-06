@@ -26,3 +26,15 @@ services:
       - SYS_PTRACE
     networks:
       - default
+  redis:
+    image: redis:${REDIS_VERSION}
+    ports:
+      - "${REDIS_HOST_PORT}:6379"
+    volumes:
+      - ${REDIS_CONF_FILE}:/usr/local/etc/redis.conf
+      - ${REDIS_DATA_DIR}:/usr/local/redis/data
+      - ${REDIS_LOG_DIR}:/usr/local/redis/redis.log
+    restart: always
+    networks:
+      - default
+
