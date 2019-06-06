@@ -2,5 +2,9 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/www/KM-PHP" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/www/bxdkappApi" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/www/html/KM-PHP" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/www/html/bxdkappApi" vcs="Git" />
   </component>
 </project>
